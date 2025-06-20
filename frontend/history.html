@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Message History</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-image: url('images/neon.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      margin: 0;
+      padding: 0;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    .overlay {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 10px #ccc;
+      backdrop-filter: blur(4px);
+    }
+
+    nav {
+      background-color: #1e385e;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin: 10px 0;
+      color: #111827;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    td {
+      color: #374151;
+    }
+
+    .timestamp {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .category-btn {
+      background: none;
+      color: #2563eb;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .category-btn:hover {
+      color: #1e40af;
+    }
+
+    .message-content {
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    .contacts-dropdown {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 20px;
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 10px;
+      }
+
+      td {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      td:last-child {
+        border-bottom: none;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6b7280;
+        flex-basis: 40%;
+      }
+    }
+
+    .read-more-btn {
+  margin-top: 6px;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: inline-block;
+}
+
+.read-more-btn:hover {
+  text-decoration: underline;
+}
+
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <a href="index.html">Send Message</a>
+      <a href="add_category.html">Add Category</a>
+      <a href="add_contact.html">Add Contact</a>
+      <a href="history.html">Message History</a>
+    </nav>
+
+    <h1>Message History</h1>
+    <h2>Sent WhatsApp Messages by Category</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Message</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadMessages() {
+      try {
+        const res = await fetch('/api/messages');
+        const messages = await res.json();
+
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = '';
+
+        const seenCategories = new Set();
+
+        messages.forEach((msg, index) => {
+          const isCategorized = msg.category && msg.category !== 'Uncategorized';
+          const hasRecipients = Array.isArray(msg.recipients) && msg.recipients.length > 0;
+
+          // Show only one row per category
+          if (isCategorized) {
+            if (seenCategories.has(msg.category)) return;
+            seenCategories.add(msg.category);
+
+            const dropdownId = `dropdown-${msg.category_id}`;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>
+                <button class="category-btn" data-id="${msg.category_id}" data-dropdown="${dropdownId}">
+                  ${msg.category}
+                </button>
+              </td>
+              <td class="message-content">
+  <span class="short-msg">${msg.message.length > 100 ? msg.message.slice(0, 100) + '...' : msg.message}</span>
+  ${msg.message.length > 100 ? `<button class="read-more-btn" data-full="${encodeURIComponent(msg.message)}">READ MORE</button>` : ''}
+</td>
+              <td class="timestamp">${msg.sent_at ? new Date(msg.sent_at).toLocaleString() : '-'}</td>
+            `;
+            tbody.appendChild(row);
+
+            const dropdown = document.createElement('tr');
+            dropdown.innerHTML = `
+              <td colspan="3">
+                <ul id="${dropdownId}" class="contacts-dropdown" style="display:none;"></ul>
+              </td>
+            `;
+            tbody.appendChild(dropdown);
+          }
+
+          // For direct messages (not in a category)
+          if (!isCategorized && hasRecipients) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>
+                ${msg.recipients.map(r => `${r.name || 'Unknown'} (${r.number})`).join('<br>')}
+              </td>
+              <td class="message-content">
+  <span class="short-msg">${msg.message.length > 100 ? msg.message.slice(0, 100) + '...' : msg.message}</span>
+  ${msg.message.length > 100 ? `<button class="read-more-btn" data-full="${encodeURIComponent(msg.message)}">READ MORE</button>` : ''}
+</td>
+              <td class="timestamp">${msg.sent_at ? new Date(msg.sent_at).toLocaleString() : '-'}</td>
+            `;
+            tbody.appendChild(row);
+          }
+        });
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const dropdownId = btn.dataset.dropdown;
+            const listEl = document.getElementById(dropdownId);
+            const catId = btn.dataset.id;
+
+            if (listEl.childElementCount > 0) {
+              listEl.style.display = listEl.style.display === 'none' ? 'block' : 'none';
+              return;
+            }
+
+            try {
+              const res = await fetch(`/api/categories/${catId}/contacts`);
+              const contacts = await res.json();
+              if (contacts.length === 0) {
+                listEl.innerHTML = '<li style="color:#777;">No contacts found in this category</li>';
+              } else {
+                listEl.innerHTML = contacts.map(c => `<li>${c.name} - ${c.number}</li>`).join('');
+              }
+              listEl.style.display = 'block';
+            } catch (err) {
+              listEl.innerHTML = '<li style="color:red;">Failed to load contacts</li>';
+              listEl.style.display = 'block';
+              console.error(err);
+            }
+          });
+        });
+      } catch (err) {
+        console.error('❌ Failed to load message history:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadMessages);
+    document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('read-more-btn')) {
+      const btn = e.target;
+      const fullMessage = decodeURIComponent(btn.dataset.full);
+      const shortMsgSpan = btn.previousElementSibling;
+
+      if (btn.innerText === 'READ MORE') {
+        shortMsgSpan.textContent = fullMessage;
+        btn.innerText = 'SHOW LESS';
+      } else {
+        shortMsgSpan.textContent = fullMessage.slice(0, 100) + '...';
+        btn.innerText = 'READ MORE';
+      }
+    }
+  });
+  </script>
+</body>
+</html>

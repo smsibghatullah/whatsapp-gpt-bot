@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Send WhatsApp Message</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-image: url('images/neon.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      color: #1e385e;
+      margin: 0;
+      padding: 0;
+    }
+
+    .overlay {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 10px #ccc;
+      position: relative;
+    }
+
+    nav {
+      background-color: #1e385e;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 15px;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    h3 {
+      color: #111827;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input, textarea, select {
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #2563eb;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1e40af;
+    }
+
+    .dropdown-wrapper {
+      position: relative;
+    }
+
+    .dropdown-arrow {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #888;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    #contactList {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 2px;
+      display: none;
+    }
+
+    .contact-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .contact-item:hover {
+      background-color: #5b92b8;
+    }
+
+    .selected {
+      background-color: #4b8fbd;
+    }
+
+    #selectedNames {
+      font-size: 14px;
+      color: #2f32ce;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    #qrcode {
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    #status {
+      font-weight: 500;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <a href="index.html">Send Message</a> |
+      <a href="add_category.html">Add Category</a> |
+      <a href="add_contact.html">Add Contact</a> |  
+      <a href="history.html">History</a>
+    </nav>
+
+    <div id="qrcode"></div>
+
+    <h3>Send Message</h3>
+    <form id="sendForm">
+      <label><input type="checkbox" id="useCategory" /> Send to Category</label>
+
+      <select id="categorySelect" disabled>
+        <option value="">Select Category</option>
+      </select>
+
+      <div class="dropdown-wrapper">
+        <label for="searchInput">Search Contacts:</label>
+        <input type="text" id="searchInput" placeholder="Search name or number" autocomplete="off" />
+        <span class="dropdown-arrow" id="toggleArrow">▼</span>
+        <div id="contactList"></div>
+      </div>
+
+      <div id="selectedNames">Selected: None</div>
+
+      <input type="text" id="numberInput" placeholder="Enter Number e.g. +923451234567" />
+
+      <textarea id="message" placeholder="Enter Message" rows="4"></textarea>
+      <button type="submit">Send</button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const socket = io();
+      const useCategory = document.getElementById("useCategory");
+      const categorySelect = document.getElementById("categorySelect");
+      const numberInput = document.getElementById("numberInput");
+      const searchInput = document.getElementById("searchInput");
+      const contactList = document.getElementById("contactList");
+      const statusDiv = document.getElementById("status");
+      const selectedNamesDiv = document.getElementById("selectedNames");
+      const arrow = document.getElementById('toggleArrow');
+
+      arrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = contactList.style.display === 'block';
+        contactList.style.display = isVisible ? 'none' : 'block';
+        searchInput.focus();
+      });
+
+      let allContacts = [];
+      const selectedNumbers = new Set();
+
+      function updateSelectedNames() {
+        const selected = allContacts.filter(c => selectedNumbers.has(c.number)).map(c => c.name);
+        selectedNamesDiv.textContent = selected.length
+          ? `Selected: ${selected.join(', ')}`
+          : 'Selected: None';
+      }
+
+      socket.on('qr', qr => {
+        document.getElementById("qrcode").innerHTML = `<img src="${qr}" width="300" />`;
+      });
+
+      socket.on('ready', () => {
+        document.getElementById("qrcode").innerHTML = `<p style="color:green;">✅ WhatsApp Connected</p>`;
+      });
+
+      useCategory.addEventListener("change", () => {
+        categorySelect.disabled = useCategory.checked;
+        numberInput.disabled = useCategory.checked;
+        contactList.style.display = useCategory.checked ? "none" : "block";
+      });
+
+      searchInput.addEventListener("input", () => {
+        const value = searchInput.value.toLowerCase();
+        const filtered = allContacts.filter(c =>
+          c.name.toLowerCase().includes(value) || c.number.includes(value)
+        );
+        renderContactList(filtered);
+      });
+
+      searchInput.addEventListener("focus", () => {
+        contactList.style.display = "block";
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!document.querySelector(".dropdown-wrapper").contains(e.target)) {
+          contactList.style.display = "none";
+        }
+      });
+
+      function renderContactList(contacts) {
+        contactList.innerHTML = "";
+        contacts.forEach(c => {
+          const div = document.createElement("div");
+          div.classList.add("contact-item");
+          if (selectedNumbers.has(c.number)) div.classList.add("selected");
+          div.textContent = `${c.name} - ${c.number}`;
+          div.dataset.number = c.number;
+
+          div.addEventListener("click", () => {
+            if (selectedNumbers.has(c.number)) {
+              selectedNumbers.delete(c.number);
+              div.classList.remove("selected");
+            } else {
+              selectedNumbers.add(c.number);
+              div.classList.add("selected");
+            }
+            updateSelectedNames();
+          });
+
+          contactList.appendChild(div);
+        });
+      }
+
+      async function loadContacts() {
+        const res = await fetch('/api/contacts');
+        const data = await res.json();
+        allContacts = data;
+        renderContactList(data);
+      }
+
+      async function loadCategories() {
+        const res = await fetch('/api/categories');
+        const cats = await res.json();
+        cats.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          categorySelect.appendChild(opt);
+        });
+      }
+
+      document.getElementById("sendForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        statusDiv.textContent = "";
+
+        const message = document.getElementById("message").value.trim();
+        if (!message) return alert("Please enter message");
+
+        let numbers = [];
+        let category = null;
+
+        if (useCategory.checked) {
+          category = categorySelect.value;
+          if (!category) return alert("Please select category");
+        } else {
+          numbers = Array.from(selectedNumbers);
+          const manual = numberInput.value.trim();
+          if (!numbers.length && manual) numbers.push(manual);
+          if (!numbers.length) return alert("Select contact(s) or enter number");
+        }
+
+        statusDiv.textContent = "Sending...";
+
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numbers, message, category })
+        });
+
+        if (res.ok) {
+          statusDiv.textContent = '✅ Message sent!';
+          document.getElementById("sendForm").reset();
+          selectedNumbers.clear();
+          updateSelectedNames();
+          renderContactList(allContacts);
+        } else {
+          statusDiv.textContent = '❌ Failed to send message';
+        }
+      });
+
+      loadContacts();
+      loadCategories();
+    });
+  </script>
+</body>
+</html>

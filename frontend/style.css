@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: 30px auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
+  }
+  h2, h3 {
+    text-align: center;
+    color: #333;
+  }
+  input, select, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button:hover {
+    background: #218838;
+  }
+  .checkbox-group {
+    margin-top: 10px;
+  }
+  nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #007bff;
+  }
+  nav a:hover {
+    text-decoration: underline;
+  }
+  .alert {
+    margin-top: 10px;
+    padding: 10px;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    border-radius: 4px;
+  }
+  input.edit-name, input.edit-number, select.edit-category {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  

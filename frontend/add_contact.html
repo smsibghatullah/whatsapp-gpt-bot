@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Contact</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-image: url('images/neon.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      color: #1f2937;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .overlay {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 0 10px #ccc;
+      backdrop-filter: blur(4px);
+    }
+
+    nav {
+      background-color: #1e385e;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 12px;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    h2, h3 {
+      color: #111827;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    form input[type="text"],
+    form select {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    form button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    form button:hover {
+      background-color: #1e40af;
+    }
+
+    #message {
+      display: none;
+      background: #d1fae5;
+      color: #065f46;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .form-section {
+      margin-top: 30px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    input.edit-name,
+    input.edit-number,
+    select.edit-category {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+    }
+
+    td:last-child {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn.saveBtn {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .btn.deleteBtn {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn:hover {
+      background-color: #1e40af;
+    }
+
+    #searchInput {
+      width: 60%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #sortSelect {
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <a href="index.html">Send Message</a> |
+      <a href="add_category.html">Add Category</a> |
+      <a href="add_contact.html">Add Contact</a> |
+      <a href="history.html">History</a>
+    </nav>
+
+    <h2>Add Contact</h2>
+    <form id="contactForm">
+      <input type="hidden" id="contactId" />
+      <input type="text" id="contactName" placeholder="Contact Name" required />
+      <input type="text" id="contactNumber" placeholder="Number e.g. 923451234567" required />
+      <select id="contactCategory">
+        <option value="">Uncategorized</option>
+      </select>
+      <button type="submit" id="formButton">Add Contact</button>
+    </form>
+
+    <div id="message"></div>
+
+    <div class="form-section">
+      <h3>Contact List</h3>
+      <div style="display:flex; justify-content: space-between; align-items: center;">
+        <input type="text" id="searchInput" placeholder="Search by name or number..." />
+        <select id="sortSelect">
+          <option value="name_asc">Sort by Name (A-Z)</option>
+          <option value="name_desc">Sort by Name (Z-A)</option>
+          <option value="number_asc">Sort by Number (0-9)</option>
+          <option value="number_desc">Sort by Number (9-0)</option>
+          <option value="category_asc">Sort by Category (A-Z)</option>
+          <option value="category_desc">Sort by Category (Z-A)</option>
+        </select>
+      </div>
+
+      <table id="contactsTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let categoryMap = {};
+    let fullContactList = [];
+
+    async function loadCategories() {
+      const res = await fetch('/api/categories');
+      const categories = await res.json();
+      const select = document.getElementById('contactCategory');
+      select.innerHTML = '<option value="">Uncategorized</option>';
+      categoryMap = {};
+      categories.forEach(cat => {
+        categoryMap[cat.id] = cat.name;
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        select.appendChild(opt);
+      });
+      loadContactsTable();
+    }
+
+    async function loadContactsTable() {
+      const res = await fetch('/api/contacts');
+      const contacts = await res.json();
+      fullContactList = contacts;
+      renderContactRows(fullContactList);
+    }
+
+    function renderContactRows(contacts) {
+      const sortValue = document.getElementById('sortSelect').value;
+      contacts = [...contacts];
+      switch (sortValue) {
+        case 'name_asc': contacts.sort((a, b) => a.name.localeCompare(b.name)); break;
+        case 'name_desc': contacts.sort((a, b) => b.name.localeCompare(a.name)); break;
+        case 'number_asc': contacts.sort((a, b) => a.number.localeCompare(b.number)); break;
+        case 'number_desc': contacts.sort((a, b) => b.number.localeCompare(a.number)); break;
+        case 'category_asc': contacts.sort((a, b) => (a.category?.name || '').localeCompare(b.category?.name || '')); break;
+        case 'category_desc': contacts.sort((a, b) => (b.category?.name || '').localeCompare(a.category?.name || '')); break;
+      }
+      const tbody = document.querySelector('#contactsTable tbody');
+      tbody.innerHTML = '';
+      contacts.forEach(contact => {
+        const row = document.createElement('tr');
+        const categoryOptions = Object.entries(categoryMap).map(([id, name]) => {
+          const isSelected = String(contact.category?.id ?? '') === id;
+          return `<option value="${id}" ${isSelected ? 'selected' : ''}>${name}</option>`;
+        }).join('');
+        row.innerHTML = `
+          <td><input type="text" value="${contact.name}" class="edit-name" /></td>
+          <td><input type="text" value="${contact.number}" class="edit-number" /></td>
+          <td>
+            <select class="edit-category">
+              <option value="">Uncategorized</option>
+              ${categoryOptions}
+            </select>
+          </td>
+          <td style="display: flex; gap: 6px;">
+            <button class="saveBtn btn" data-id="${contact.id}">save</button>
+            <button class="deleteBtn btn" data-id="${contact.id}">Delete</button>
+          </td>`;
+        tbody.appendChild(row);
+      });
+      attachEventListeners();
+    }
+
+    function attachEventListeners() {
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          const id = e.target.dataset.id;
+          const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.success) {
+            showMessage('Contact deleted successfully.');
+            loadContactsTable();
+          } else alert('Error deleting contact');
+        });
+      });
+
+      document.querySelectorAll('.saveBtn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          const row = btn.closest('tr');
+          const id = btn.dataset.id;
+          const name = row.querySelector('.edit-name').value.trim();
+          const number = row.querySelector('.edit-number').value.trim();
+          const category = row.querySelector('.edit-category').value;
+
+          const payload = { name, number, category };
+          const res = await fetch(`/api/contacts/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.id) {
+            showMessage(`Contact "${data.name}" updated successfully!`);
+            loadContactsTable();
+          } else alert('Error updating contact');
+        });
+      });
+    }
+
+    document.getElementById('contactForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const id = document.getElementById('contactId').value;
+  const name = document.getElementById('contactName').value.trim();
+  const number = document.getElementById('contactNumber').value.trim();
+  const category = document.getElementById('contactCategory').value;
+
+  const isValid = /^(\+[\d]{10,15}|03\d{9})$/.test(number);
+  if (!isValid) {
+    alert('Invalid number. Use +(countrycode & number) format.');
+    return;
+  }
+
+  const payload = { name, number, category };
+  const url = id ? `/api/contacts/${id}` : '/api/contacts';
+  const method = id ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (data.id) {
+    showMessage(`Contact "${data.name}" ${id ? 'updated' : 'added'} successfully!`);
+    e.target.reset();
+    document.getElementById('contactId').value = '';
+    document.getElementById('formButton').textContent = 'Add Contact';
+    loadContactsTable();
+  } else {
+    alert('Error saving contact');
+  }
+});
+
+
+    function showMessage(msg) {
+      const div = document.getElementById('message');
+      div.textContent = msg;
+      div.style.display = 'block';
+      setTimeout(() => (div.style.display = 'none'), 3000);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const searchTerm = this.value.toLowerCase();
+      const filtered = fullContactList.filter(contact =>
+        contact.name.toLowerCase().includes(searchTerm) ||
+        contact.number.toLowerCase().includes(searchTerm)
+      );
+      renderContactRows(filtered);
+    });
+
+    document.getElementById('sortSelect').addEventListener('change', () => {
+      renderContactRows(fullContactList);
+    });
+
+    loadCategories();
+    loadContactsTable();
+  </script>
+</body>
+</html>
