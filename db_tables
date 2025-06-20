@@ -1,0 +1,41 @@
+
+pg_dump -U attendance_app -d Whatsapp_App -t table_name --schema-only
+
+
+//categories
+
+CREATE TABLE public.categories (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+//category
+
+CREATE TABLE public.category (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL
+);
+
+//contact
+
+
+CREATE TABLE public.contact (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    phone character varying(20) NOT NULL,
+    category_id integer
+);
+
+
+//contacts
+
+
+CREATE TABLE public.contact (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    phone character varying(20) NOT NULL,
+    category_id integer
+);
+
+
